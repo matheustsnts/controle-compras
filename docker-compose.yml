@@ -1,0 +1,115 @@
+version: '3'
+services:
+
+  #PHP Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel/app
+    container_name: controlecompras-app
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www:delegated
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini:delegated
+      - ~/.composer/docker-cache/:/root/.composer:cached
+    networks:
+      - controlecompras-networks
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: controlecompras-webserver
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www:delegated
+      - ./nginx/conf.d/:/etc/nginx/conf.d/:delegated
+    networks:
+      - controlecompras-networks
+    depends_on:
+      - postgres
+      - app
+
+  #Postgres Service
+  postgres:
+    container_name: controlecompras-postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /data/postgres
+    volumes:
+        - postgres:/data/postgres:delegated
+    ports:
+      - "5432:5432"
+    networks:
+      - controlecompras-networks
+
+  #PgAdmin
+  pgadmin:
+    container_name: controlecompras-pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@sorteio.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+        - pgadmin:/root/.pgadmin
+    ports:
+      - "8080:80"
+    networks:
+      - controlecompras-networks
+
+    #composer
+  composer:
+    image: composer:latest
+    container_name: controlecompras-composer
+    volumes:
+      - ./:/var/www/
+    working_dir: /var/www/
+    depends_on:
+      - app
+    networks:
+      - controlecompras-networks
+
+  #npm
+  npm:
+    image: node:13.7
+    container_name: controlecompras-npm
+    volumes:
+      - ./:/var/www/
+    working_dir: /var/www/
+    entrypoint: ['npm']
+
+  #artisan
+  artisan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: controlecompras-artisan
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - postgres
+    working_dir: /var/www/
+    entrypoint: ['php', '/var/www/artisan']
+    networks:
+      - controlecompras-networks
+
+#Docker Networks
+networks:
+  controlecompras-networks:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
+  postgres:
+  pgadmin:

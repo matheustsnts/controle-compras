@@ -1,0 +1,26 @@
+Nothing to migrate.
+Seeding: Database\Seeders\UsersSeeder
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint "users_email_unique"
+DETAIL:  Key (email)=(matheus@teste.com) already exists. (SQL: insert into "users" ("name", "email", "password", "updated_at", "created_at") values (Matheus, matheus@teste.com, $2y$10$mSqjoHqovtLSkMkH6c/z7eYetBq8.vbIKu3fh/yNwyuecsLupvsBW, 2022-10-07 14:21:20, 2022-10-07 14:21:20) returning "id")
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:712
+    708▕         // If an exception occurs when attempting to run a query, we'll format the error
+    709▕         // message to include the bindings with SQL, which will make this exception a
+    710▕         // lot more helpful to the developer instead of just the database's errors.
+    711▕         catch (Exception $e) {
+  ➜ 712▕             throw new QueryException(
+    713▕                 $query, $this->prepareBindings($bindings), $e
+    714▕             );
+    715▕         }
+    716▕     }
+
+      [2m+18 vendor frames [22m
+  19  database/seeders/UsersSeeder.php:47
+      Illuminate\Database\Eloquent\Model::__callStatic()
+
+      [2m+7 vendor frames [22m
+  27  database/seeders/DatabaseSeeder.php:27
+      Illuminate\Database\Seeder::call()
